@@ -18,6 +18,8 @@
       perSystem = {pkgs, ...}: {
         devshells.default = {
           packages = with pkgs; [
+            air
+
             go
             gopls
             gotools
