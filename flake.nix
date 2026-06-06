@@ -24,6 +24,8 @@
             gopls
             gotools
             gofumpt
+
+            templ
           ];
         };
 
