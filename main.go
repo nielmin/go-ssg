@@ -4,18 +4,17 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strings"
 
-	"github.com/adrg/frontmatter"
 	"github.com/gomarkdown/markdown"
 	"github.com/gomarkdown/markdown/html"
 	"github.com/gomarkdown/markdown/parser"
 	"github.com/microcosm-cc/bluemonday"
+	"github.com/nielmin/go-ssg/frntm"
 )
 
 func mdToHTML(md []byte) []byte {
 	// parse frontmatter before rendering
-	fmless := parseFm(md)
+	fmless := frntm.Parse(md)
 
 	// create markdown parser with extensions
 	extensions := parser.CommonExtensions | parser.AutoHeadingIDs | parser.NoEmptyLineBeforeBlock
@@ -42,18 +41,6 @@ func htmlRead(w http.ResponseWriter, r *http.Request) {
 	w.Write(index)
 }
 
-func parseFm(file []byte) []byte {
-	var matter struct {
-		Name string   `yaml:"name"`
-		Tags []string `yaml:"tags"`
-	}
-
-	rest, err := frontmatter.Parse(strings.NewReader(string(file)), &matter)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return rest
-}
 func main() {
 	port := "8080"
 	mux := http.NewServeMux()
