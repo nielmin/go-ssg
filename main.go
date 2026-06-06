@@ -14,17 +14,24 @@ import (
 )
 
 func mdToHTML(md []byte) []byte {
+	// parse frontmatter before rendering
+	fmless := parseFm(md)
+
 	// create markdown parser with extensions
 	extensions := parser.CommonExtensions | parser.AutoHeadingIDs | parser.NoEmptyLineBeforeBlock
 	p := parser.NewWithExtensions(extensions)
-	doc := p.Parse(md)
+	doc := p.Parse(fmless)
 
 	// create HTML renderer with extensions
 	htmlFlags := html.CommonFlags | html.HrefTargetBlank
 	opts := html.RendererOptions{Flags: htmlFlags}
 	renderer := html.NewRenderer(opts)
 
-	return markdown.Render(doc, renderer)
+	// sanitize policy
+	s := bluemonday.UGCPolicy()
+
+	// sanitize html
+	return s.SanitizeBytes(markdown.Render(doc, renderer))
 }
 
 func htmlRead(w http.ResponseWriter, r *http.Request) {
@@ -35,14 +42,7 @@ func htmlRead(w http.ResponseWriter, r *http.Request) {
 	w.Write(index)
 }
 
-func main() {
-	port := "8080"
-
-	file, err := os.ReadFile("test.md")
-	if err != nil {
-		log.Fatal(err)
-	}
-
+func parseFm(file []byte) []byte {
 	var matter struct {
 		Name string   `yaml:"name"`
 		Tags []string `yaml:"tags"`
@@ -52,10 +52,18 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
+	return rest
+}
+func main() {
+	port := "8080"
 	mux := http.NewServeMux()
-	p := bluemonday.UGCPolicy()
-	html := p.SanitizeBytes(mdToHTML(rest))
+
+	file, err := os.ReadFile("test.md")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	html := mdToHTML(file)
 
 	newFile := os.WriteFile("index.html", html, 0o666)
 	if newFile != nil {
