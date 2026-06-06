@@ -1,4 +1,4 @@
-module go-ssg
+module github.com/nielmin/go-ssg
 
 go 1.26.3
 
