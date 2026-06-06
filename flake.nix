@@ -18,6 +18,8 @@
       perSystem = {pkgs, ...}: {
         devshells.default = {
           packages = with pkgs; [
+            gcc
+
             air
 
             go
